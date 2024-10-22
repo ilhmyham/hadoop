@@ -1,0 +1,71 @@
+Prerequisites
+sudo apt update && sudo apt upgrade -y
+
+sudo apt install openssh-server openssh-client -y
+
+sudo apt install openjdk-11-jdk -y
+
+
+Step 1: Create Non-Root User For Hadoop
+sudo adduser hdoop
+
+su - hdoop
+
+Step 2: Set Up SSH Keys
+(generate an SSH key pair)
+ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
+
+(enable to mark them as authorized_keys and save SSH directory)
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+
+(connect to your localhost)
+ssh localhost
+
+Step 3: Download and Install Hadoop on Ubuntu
+wget https://downloads.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
+
+(finish the extraction and installation process)
+tar xzf hadoop-3.3.6.tar.gz
+
+sudo mv hadoop-3.3.6 /usr/local/hadoop
+
+sudo chown -R hdoop:hdoop /usr/local/hadoop
+
+Step 4: Configure Hadoop Environment
+echo 'export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")' | sudo tee -a /usr/local/hadoop/etc/hadoop/hadoop-env.sh
+
+Step 5: Edit Configuration Files
+nano /usr/local/hadoop/etc/hadoop/core-site.xml
+
+Step 6: Format HDFS
+/usr/local/hadoop/bin/hdfs namenode -format
+
+Step 7: Start Hadoop Services
+/usr/local/hadoop/sbin/start-dfs.sh
+
+/usr/local/hadoop/sbin/start-yarn.sh
+
+Step 8: Verify Installation
+jps
+
+Step 9: Access Web Interfaces
+Open web browsers to Hadoop’s NameNode and ResourceManager interfaces.
+
+NameNode: http://localhost:9870
+ResourceManager: http://localhost:8088
+
+Step 10: Run a MapReduce Example
+/usr/local/hadoop/bin/hdfs dfs -mkdir /input
+
+/usr/local/hadoop/bin/hdfs dfs -put localfile.txt /input
+
+/usr/local/hadoop/bin/hadoop jar
+
+/usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.6.jar grep /input /output 'dfs[a-z.]+'
+
+/usr/local/hadoop/bin/hdfs dfs -cat /output/*
+
+Step 11: Set Environment Variables
+echo 'export PATH=$PATH:/usr/local/hadoop/bin:/usr/local/hadoop/sbin' >> ~/.bashrc
+
+source ~/.bashrc
