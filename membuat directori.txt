@@ -1,0 +1,16 @@
+membuat direktori
+hdfs dfs -mkdir /mydata 
+mengetahui daftar file
+ls 
+copy file dari system local to HDFS
+hdfs dfs -copyFromLocal aba* /mydata 
+mengetahui daftar folder
+hdfs dfs -ls /mydata 
+membuat folder
+hdfs dfs -mkdir /folder
+mengunggah file
+hdfs dfs -put namafile /folder/
+menampilkan informasi HDFS
+hdfs dfsadmin -report
+menghapus file
+hdfs dfs -rm /folder/namafile
