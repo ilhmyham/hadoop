@@ -1,0 +1,101 @@
+menjalankan hadoop
+start-dfs.sh
+start-yarn.sh
+
+Buat folder input
+hadoop fs -mkdir /input2
+
+Buat file inputWordCount.txt di komputer lokal, lalu isi file tersebut dengan kata-kata tertentu
+
+sudo nano inputWordCount.txt 
+
+cth:
+mahasiswa memahami konsep MapReduce dalam distribusi data besar, mengimplementasikan algoritma sederhana menggunakan MapReduce pada Hadoop, serta melakukan analisis hasil MapReduce pada dataset.
+
+Pindah file inputWordCount.txt dari komputer lokal ke folder input2 pada HDFS
+
+hadoop fs -put inputWordCount.txt /input
+
+sudo nano WordCount.java
+
+Berikut ini adalah contoh kode program untuk wordcount menggunakan Java:
+
+import java.io.IOException;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+public class WordCount {
+    // Map function
+    public static class MyMapper extends Mapper<LongWritable, Text, Text, IntWritable>{
+         private Text word = new Text();
+         public void map(LongWritable key, Text value, Context context) 
+                 throws IOException, InterruptedException {
+             // Splitting the line on spaces
+             String[] stringArr = value.toString().split("\\s+");
+             for (String str : stringArr) {
+                 word.set(str);
+                 context.write(word, new IntWritable(1));
+             }           
+         }
+    }
+
+    // Reduce function
+    public static class MyReducer extends Reducer<Text, IntWritable, Text, IntWritable>{        
+        private IntWritable result = new IntWritable();
+        public void reduce(Text key, Iterable<IntWritable> values, Context context) 
+                throws IOException, InterruptedException {
+          int sum = 0;
+          for (IntWritable val : values) {
+            sum += val.get();
+          }
+          result.set(sum);
+          context.write(key, result);
+        }
+    }
+    public static void main(String[] args)  throws Exception{
+        Configuration conf = new Configuration();
+
+        Job job = Job.getInstance(conf, "WC");
+        job.setJarByClass(WordCount.class);
+        job.setMapperClass(MyMapper.class);    
+        job.setReducerClass(MyReducer.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+    }
+}
+
+Export classpath
+export HADOOP_CLASSPATH=$($HADOOP_HOME/bin/hadoop classpath)
+
+Buat folder WordCountCompiled untuk menympan hasil compile file WordCount.java
+sudo mkdir WordCountCompiled
+
+Ubah permission dari folder yang akan dipakai untuk menympan hasil compile
+sudo chmod -R 777 WordCountCompiled
+
+Compile file WordCount.java yang telah dibuat
+javac -classpath $HADOOP_CLASSPATH -d WordCountCompiled/ WordCount.java
+
+Ubah menjadi file executable .jar
+jar -cvf WordCount.jar -C WordCountCompiled/ .
+
+Jalankan file jar tersebut untuk menghitung jumlah kata pada file inputWordCount.txt yang ada di folder input2 pada HDFS, kemudian simpan hasilnya di folder WordCount-Result
+
+hadoop jar WordCount.jar WordCount /input/inputWordCount.txt /WordCount-Result
+
+Cek di folder WordCount-Result:
+hadoop fs -ls WordCount-Result
+
+Melihat hasil perhitungan Wordcount di file part-r-00000
+hadoop fs -cat /WordCount-Result/part-r-00000
